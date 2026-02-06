@@ -1,11 +1,10 @@
 import json
 import csv
 import requests
-from pathlib import Path
 
 from zabbix_config import ZABBIX_API_URL, headers
 from zabbix_get_token import zabbix_login
-
+from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 LIST_FILE = HERE / "host_create_list.csv"
@@ -81,12 +80,14 @@ def make_interface(if_type: int, main: int, useip: int, ip_or_dns: str, port: st
     }
 
 
-def build_display_name(host_name: str, utm_no: str, specific_id: str) -> str:
-    if not utm_no:
-        raise ValueError("utm_no が空です")
-    if not specific_id:
-        raise ValueError("specific_id が空です")
-    return f"{utm_no}_{specific_id}_{host_name}"
+# === 要件通り：ホスト名/表示名の組み立て ===
+# host: 00<特定ID(4桁ゼロ埋め)>_BrainBoxCloud
+# name: <UTM番号>_00<特定ID(4桁ゼロ埋め)>_<CSV3列目>
+def build_host_and_visible_name(utm_no: str, specific_id: str, display_name_part: str):
+    sid4 = str(int(specific_id)).zfill(4)
+    host_name = f"00{sid4}_BrainBoxCloud"          # 1234 -> 001234_BrainBoxCloud
+    visible_name = f"{utm_no}_00{sid4}_{display_name_part}"
+    return host_name, visible_name
 
 
 def host_create(auth, host_name: str, visible_name: str, groupids, iface: dict, templateids):
@@ -110,7 +111,7 @@ def main():
     rows = load_rows_csv(LIST_FILE)
 
     for ln, cols in rows:
-        group_field, host_name, display_name, if_type, main_, useip, ip_or_dns, port, utm_no, specific_id = cols
+        group_field, host, display_name_part, if_type, main_, useip, ip_or_dns, port, utm_no, specific_id = cols
 
         group_names = [g.strip() for g in group_field.split(",") if g.strip()]
         if not group_names:
@@ -118,25 +119,25 @@ def main():
             continue
 
         try:
-            if host_get(auth, host_name):
-                print(f"SKIP(既存) L{ln}: {host_name}")
+            host, visible_name = build_host_and_visible_name(utm_no, specific_id, display_name_part)
+
+            if host_get(auth, host):
+                print(f"SKIP(既存) L{ln}: {host}")
                 continue
 
             groupids = hostgroup_get_ids_by_names(auth, group_names)
             iface = make_interface(int(if_type), int(main_), int(useip), ip_or_dns, port)
 
-            visible_name = display_name if display_name else build_display_name(host_name, utm_no, specific_id)
-
-            res = host_create(auth, host_name, visible_name, groupids, iface, templateids)
+            res = host_create(auth, host, visible_name, groupids, iface, templateids)
 
             if "error" in res:
-                print(f"NG L{ln}: {host_name} -> {res['error']}")
+                print(f"NG L{ln}: {host} -> {res['error']}")
             else:
                 hostids = res.get("result", {}).get("hostids", [])
-                print(f"OK L{ln}: {host_name} name={visible_name} groups={group_names} -> {hostids}")
+                print(f"OK L{ln}: {host} name={visible_name} groups={group_names} -> {hostids}")
 
         except Exception as e:
-            print(f"ERROR L{ln}: {host_name} -> {e}")
+            print(f"ERROR L{ln}: {host} -> {e}")
 
 
 if __name__ == "__main__":
