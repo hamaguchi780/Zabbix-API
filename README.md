@@ -1,4 +1,4 @@
-# ※Pythonが前提
+# ※Pythonが前提(V3.8～,検証3.13.7)
 
 - 仮想環境の有効化 （作業フォルダ移行後下記コマンドを実施）
   - .\venv\Scripts\activate
