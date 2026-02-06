@@ -4,7 +4,10 @@ import requests
 from zabbix_config import ZABBIX_API_URL, headers
 from zabbix_get_token import zabbix_login  # あなたのログイン関数のあるファイル名に合わせてください
 
-LIST_FILE = "hostgroup_create_list"
+from pathlib import Path
+
+HERE = Path(__file__).resolve().parent # 環境によって修正する
+LIST_FILE = HERE / "hostgroup_create_list"
 
 def load_group_names(path: str):
     names = []
