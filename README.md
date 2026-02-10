@@ -57,6 +57,15 @@
 - 10列目：
   - ユーザーID
 
+## zabbix_snmp_create_host.py
+
+SNMP監視用のホストを作成する
+
+### snmp_host_create_list.csv
+
+必須は1,7,8,9列目
+詳細はsnmp_host_create_list.csvと同じ。
+
 ---
 
 - <https://www.zabbix.com/documentation/7.0/en/manual/api/reference/host/create>
