@@ -23,8 +23,8 @@ def load_rows_csv(path: str):
                 continue
             if cols[0].strip().startswith("#"):
                 continue
-            if len(cols) != 10:
-                raise ValueError(f"{path}:{ln} フォーマット不正(10列必要): {cols}")
+            if len(cols) != 9:
+                raise ValueError(f"{path}:{ln} フォーマット不正(9列必要): {cols}")
             rows.append((ln, [c.strip() for c in cols]))
     return rows
 
@@ -85,7 +85,7 @@ def make_interface(if_type: int, main: int, useip: int, ip_or_dns: str, port: st
 # name: <UTM番号>_00<特定ID(4桁ゼロ埋め)>_<CSV3列目>
 def build_host_and_visible_name(utm_no: str, specific_id: str, display_name_part: str):
     sid4 = str(int(specific_id)).zfill(4)
-    host_name = f"00{sid4}_BrainBoxCloud"          # 1234 -> 001234_BrainBoxCloud
+    host_name = f"00{sid4}_BrainBoxCloud"  # 1234 -> 001234_BrainBoxCloud
     visible_name = f"{utm_no}_00{sid4}_{display_name_part}"
     return host_name, visible_name
 
@@ -111,7 +111,7 @@ def main():
     rows = load_rows_csv(LIST_FILE)
 
     for ln, cols in rows:
-        group_field, host, display_name_part, if_type, main_, useip, ip_or_dns, port, utm_no, specific_id = cols
+        group_field, specific_id, display_name_part, if_type, main_, useip, ip_or_dns, port, utm_no = cols
 
         group_names = [g.strip() for g in group_field.split(",") if g.strip()]
         if not group_names:
@@ -137,7 +137,7 @@ def main():
                 print(f"OK L{ln}: {host} name={visible_name} groups={group_names} -> {hostids}")
 
         except Exception as e:
-            print(f"ERROR L{ln}: {host} -> {e}")
+            print(f"ERROR L{ln}: {specific_id} -> {e}")
 
 
 if __name__ == "__main__":
